@@ -12,4 +12,23 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.post('/add', async (req, res) => {
+  try {
+    const { name, specialization, language, availability, fees } = req.body;
+
+    const therapist = await Therapist.create({
+      name,
+      specialization,
+      language,
+      availability,
+      fees,
+      status: "approved"
+    });
+
+    res.status(201).json({ message: "Therapist added", therapist });
+  } catch (err) {
+    res.status(500).json({ message: "Error adding therapist" });
+  }
+});
+
 module.exports = router;

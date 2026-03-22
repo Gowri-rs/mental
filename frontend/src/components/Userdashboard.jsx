@@ -17,8 +17,10 @@ import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
 import MedicalServicesOutlinedIcon from "@mui/icons-material/MedicalServicesOutlined";
 
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import Navbar from "./Navbar";
+
+// ✅ FIXED: Correct import path for axiosinterceptor
+import API from "../../axiosinterceptor";
 
 const actions = [
   { title: "Take Assessment", icon: <AssignmentOutlinedIcon />, path: "/assessment", color: "#4A7C6F" },
@@ -33,8 +35,9 @@ const UserDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:5000/assessments")
+    // ✅ FIXED: Use relative path "/assessments" (baseURL already set in axiosInstance)
+    API
+      .get("/assessments")
       .then((res) => setAssessments(res.data))
       .catch((err) => console.log(err))
       .finally(() => setLoading(false));
@@ -70,13 +73,7 @@ const UserDashboard = () => {
                 onClick={() => navigate(item.path)}
               >
                 <Avatar
-                  sx={{
-                    bgcolor: item.color,
-                    mx: "auto",
-                    mb: 2,
-                    width: 56,
-                    height: 56,
-                  }}
+                  sx={{ bgcolor: item.color, mx: "auto", mb: 2, width: 56, height: 56 }}
                 >
                   {item.icon}
                 </Avatar>

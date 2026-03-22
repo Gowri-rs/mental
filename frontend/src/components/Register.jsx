@@ -16,6 +16,10 @@ import {
 } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+
+// ✅ FIXED: Import API so register call works
+import API from "../../axiosinterceptor";
+
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import Navbar from "./Navbar";
 
@@ -63,7 +67,9 @@ const Register = () => {
 
     setLoading(true);
     try {
-      const response = await registerUser({ ...formData, role }); // Make sure registerUser is defined/imported
+      // ✅ FIXED: Use API instance with relative path instead of undefined registerUser()
+      const response = await API.post("/auth/register", { ...formData, role });
+
       setSuccess(response.data.message);
 
       if (response.data.token) {
@@ -123,24 +129,12 @@ const Register = () => {
             </Box>
 
             {error && (
-              <Alert
-                severity="error"
-                sx={{
-                  mb: 3,
-                  borderRadius: 3,
-                }}
-              >
+              <Alert severity="error" sx={{ mb: 3, borderRadius: 3 }}>
                 {error}
               </Alert>
             )}
             {success && (
-              <Alert
-                severity="success"
-                sx={{
-                  mb: 3,
-                  borderRadius: 3,
-                }}
-              >
+              <Alert severity="success" sx={{ mb: 3, borderRadius: 3 }}>
                 {success}
               </Alert>
             )}
@@ -153,12 +147,7 @@ const Register = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 3,
-                      bgcolor: "#fff",
-                    },
-                  }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 3, bgcolor: "#fff" } }}
                 />
 
                 <TextField
@@ -167,12 +156,7 @@ const Register = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 3,
-                      bgcolor: "#fff",
-                    },
-                  }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 3, bgcolor: "#fff" } }}
                 />
 
                 <TextField
@@ -182,18 +166,11 @@ const Register = () => {
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleChange}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 3,
-                      bgcolor: "#fff",
-                    },
-                  }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 3, bgcolor: "#fff" } }}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        <IconButton
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
+                        <IconButton onClick={() => setShowPassword(!showPassword)}>
                           {showPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
                       </InputAdornment>
@@ -209,12 +186,7 @@ const Register = () => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          borderRadius: 3,
-                          bgcolor: "#fff",
-                        },
-                      }}
+                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 3, bgcolor: "#fff" } }}
                     />
                     <TextField
                       fullWidth
@@ -222,12 +194,7 @@ const Register = () => {
                       name="supportArea"
                       value={formData.supportArea}
                       onChange={handleChange}
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          borderRadius: 3,
-                          bgcolor: "#fff",
-                        },
-                      }}
+                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 3, bgcolor: "#fff" } }}
                     />
                     <TextField
                       fullWidth
@@ -235,12 +202,7 @@ const Register = () => {
                       name="experience"
                       value={formData.experience}
                       onChange={handleChange}
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          borderRadius: 3,
-                          bgcolor: "#fff",
-                        },
-                      }}
+                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 3, bgcolor: "#fff" } }}
                     />
                   </>
                 )}
@@ -253,12 +215,7 @@ const Register = () => {
                       name="qualification"
                       value={formData.qualification}
                       onChange={handleChange}
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          borderRadius: 3,
-                          bgcolor: "#fff",
-                        },
-                      }}
+                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 3, bgcolor: "#fff" } }}
                     />
                     <TextField
                       fullWidth
@@ -266,12 +223,7 @@ const Register = () => {
                       name="license"
                       value={formData.license}
                       onChange={handleChange}
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          borderRadius: 3,
-                          bgcolor: "#fff",
-                        },
-                      }}
+                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 3, bgcolor: "#fff" } }}
                     />
                     <TextField
                       fullWidth
@@ -279,12 +231,7 @@ const Register = () => {
                       name="specialization"
                       value={formData.specialization}
                       onChange={handleChange}
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          borderRadius: 3,
-                          bgcolor: "#fff",
-                        },
-                      }}
+                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 3, bgcolor: "#fff" } }}
                     />
                     <TextField
                       fullWidth
@@ -292,12 +239,7 @@ const Register = () => {
                       name="consultationFee"
                       value={formData.consultationFee}
                       onChange={handleChange}
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          borderRadius: 3,
-                          bgcolor: "#fff",
-                        },
-                      }}
+                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 3, bgcolor: "#fff" } }}
                     />
                   </>
                 )}
@@ -313,9 +255,7 @@ const Register = () => {
                     fontWeight: "bold",
                     textTransform: "none",
                     fontSize: "1rem",
-                    "&:hover": {
-                      bgcolor: "#2E5349",
-                    },
+                    "&:hover": { bgcolor: "#2E5349" },
                   }}
                 >
                   {loading ? (
@@ -330,11 +270,7 @@ const Register = () => {
                   <Button
                     component={Link}
                     to={`/login?role=${role}`}
-                    sx={{
-                      textTransform: "none",
-                      color: "#4A7C6F",
-                      fontWeight: 700,
-                    }}
+                    sx={{ textTransform: "none", color: "#4A7C6F", fontWeight: 700 }}
                   >
                     Login
                   </Button>

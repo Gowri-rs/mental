@@ -9,8 +9,10 @@ import {
   CardContent,
 } from "@mui/material";
 
+// ✅ FIXED: Correct import path for axiosinterceptor
+import API from "../../axiosinterceptor";
+
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
 import Navbar from "./Navbar";
 
 const BookingPage = () => {
@@ -30,19 +32,19 @@ const BookingPage = () => {
     });
   };
 
-  const handleBooking = () => {
-    axios
-      .post("http://localhost:5000/bookings", {
+  const handleBooking = async () => {
+    try {
+      const res = await API.post("/bookings", {
         personId: id,
         ...form,
-      })
-      .then(() => {
-        alert("Booking successful");
-        navigate("/");
-      })
-      .catch((err) => {
-        console.log(err);
       });
+
+      alert("Booking successful");
+      navigate("/");
+    } catch (err) {
+      console.log(err);
+      alert("Booking failed");
+    }
   };
 
   return (

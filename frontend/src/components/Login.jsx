@@ -18,48 +18,39 @@ import {
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import API from "../../axiosinterceptor";
+import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 
 const Login = () => {
-  const [params] = useSearchParams();
-  const role = params.get("role") || "user";
-
   const navigate = useNavigate();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setError("");
-
     if (!email || !password) {
       setError("Email and Password are required");
       return;
     }
 
     setLoading(true);
-
     try {
-      const response = await loginUser({
-        email,
-        password,
-        role,
-      });
+      const response = await API.post("/auth/login", { email, password });
 
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      if (response.data.usertoken) {
+        localStorage.setItem("token", response.data.usertoken);
+        if (response.data.user)
+          localStorage.setItem("user", JSON.stringify(response.data.user));
 
-      if (role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/dashboard");
+        // 🔹 Redirect based on actual backend role
+        const userRole = response.data.user?.role;
+        if (userRole === "admin") navigate("/admin");
+        else navigate("/dashboard");
       }
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
@@ -77,7 +68,6 @@ const Login = () => {
       }}
     >
       <Navbar />
-
       <Container maxWidth="sm" sx={{ py: 8 }}>
         <Card
           sx={{
@@ -89,16 +79,6 @@ const Login = () => {
         >
           <CardContent sx={{ p: 5 }}>
             <Box textAlign="center" mb={4}>
-              <Chip
-                label={role.toUpperCase()}
-                sx={{
-                  mb: 2,
-                  bgcolor: "#e8f3ef",
-                  color: "#4A7C6F",
-                  fontWeight: 700,
-                }}
-              />
-
               <Typography
                 variant="h4"
                 fontWeight="bold"
@@ -106,20 +86,13 @@ const Login = () => {
               >
                 Welcome Back 🌿
               </Typography>
-
               <Typography sx={{ color: "#6b8b83" }}>
-                Login as {role}
+                Login to your account
               </Typography>
             </Box>
 
             {error && (
-              <Alert
-                severity="error"
-                sx={{
-                  mb: 3,
-                  borderRadius: 3,
-                }}
-              >
+              <Alert severity="error" sx={{ mb: 3, borderRadius: 3 }}>
                 {error}
               </Alert>
             )}
@@ -138,7 +111,6 @@ const Login = () => {
                     },
                   }}
                 />
-
                 <TextField
                   fullWidth
                   label="Password"
@@ -175,9 +147,7 @@ const Login = () => {
                     fontWeight: "bold",
                     textTransform: "none",
                     fontSize: "1rem",
-                    "&:hover": {
-                      bgcolor: "#2E5349",
-                    },
+                    "&:hover": { bgcolor: "#2E5349" },
                   }}
                 >
                   {loading ? (
@@ -186,23 +156,6 @@ const Login = () => {
                     "Login"
                   )}
                 </Button>
-
-                {role !== "admin" && (
-                  <Typography textAlign="center" sx={{ color: "#6b8b83" }}>
-                    Don’t have an account?{" "}
-                    <Button
-                      component={Link}
-                      to={`/register?role=${role}`}
-                      sx={{
-                        textTransform: "none",
-                        color: "#4A7C6F",
-                        fontWeight: 700,
-                      }}
-                    >
-                      Register
-                    </Button>
-                  </Typography>
-                )}
               </Stack>
             </Box>
           </CardContent>

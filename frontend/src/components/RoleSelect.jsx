@@ -17,7 +17,7 @@ import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutl
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
 
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
+import Navbar from './Navbar';
 
 const ROLES = [
   {
@@ -60,9 +60,10 @@ const RoleSelect = () => {
   const navigate = useNavigate();
 
   const handleProceed = () => {
-    if (selected && action) {
-      navigate(`/${action}?role=${selected}`);
-    }
+    if (!selected || !action) return;
+
+    if (action === 'login') navigate(`/login`);
+    else if (action === 'register') navigate(`/register?role=${selected}`);
   };
 
   return (
@@ -114,7 +115,7 @@ const RoleSelect = () => {
                     size="small"
                     sx={{
                       mb: 1,
-                      bgcolor: role.color + '33', // lighter background
+                      bgcolor: role.color + '33',
                       color: role.color,
                       fontWeight: 700,
                     }}
@@ -135,6 +136,7 @@ const RoleSelect = () => {
 
         {selected && (
           <Box textAlign="center" mt={5}>
+            {/* Register button only for non-admin */}
             {selected !== 'admin' && (
               <Button
                 variant={action === 'register' ? 'contained' : 'outlined'}

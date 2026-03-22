@@ -1,189 +1,104 @@
 import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Button,
-  Avatar,
-  TextField,
-  LinearProgress,
-  InputAdornment,
-  Chip,
-} from "@mui/material";
-
-import SearchIcon from "@mui/icons-material/Search";
-import MedicalServicesOutlinedIcon from "@mui/icons-material/MedicalServicesOutlined";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { Box, Typography, Grid, Card, CardContent, Button, Divider } from "@mui/material";
 import Navbar from "./Navbar";
+import API from "../../axiosinterceptor"; // your axios instance
+import { useNavigate } from "react-router-dom";
 
 const TherapistsPage = () => {
+  const [therapists, setTherapists] = useState([]);
   const navigate = useNavigate();
 
-  const [therapists, setTherapists] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const fetchTherapists = async () => {
+    try {
+      const res = await API.get("/therapists"); // backend route
+      setTherapists(res.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   useEffect(() => {
-    axios
-      .get("http://localhost:5000/therapists")
-      .then((res) => {
-        setTherapists(res.data);
-      })
-      .catch((err) => {
-        console.log(err);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    fetchTherapists();
   }, []);
 
-  const filteredTherapists = therapists.filter((t) =>
-    t.name?.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleBook = (therapistId) => {
+    navigate(`/book/therapist/${therapistId}`);
+  };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        background:
-          "linear-gradient(135deg, #eef5f3 0%, #f7fbfa 50%, #dfeee9 100%)",
-      }}
-    >
+    <Box sx={{ minHeight: "100vh", background: "#f7fbfa" }}>
       <Navbar />
+      <Box sx={{ p: 4 }}>
+        <Typography variant="h4" mb={4} fontWeight="bold">
+          Approved Therapists
+        </Typography>
 
-      <Container sx={{ py: 5 }}>
-        {/* Header */}
-        <Box sx={{ textAlign: "center", mb: 4 }}>
-          <Typography
-            variant="h4"
-            fontWeight="bold"
-            sx={{ color: "#2E5349", mb: 1 }}
-          >
-            Licensed Therapists 🩺
-          </Typography>
+        <Grid container spacing={4}>
+          {therapists.map((therapist) => (
+            <Grid item xs={12} sm={6} md={4} key={therapist._id}>
+              <Card
+                sx={{
+                  borderRadius: 4,
+                  boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+                  transition: "transform 0.3s",
+                  "&:hover": { transform: "translateY(-5px)", boxShadow: "0 12px 25px rgba(0,0,0,0.15)" },
+                  overflow: "hidden",
+                }}
+              >
+                {/* Card Header with color */}
+                <Box sx={{ height: 8, bgcolor: "#4A7C6F" }} />
 
-          <Typography sx={{ color: "#4A7C6F" }}>
-            Professional support tailored to your emotional wellbeing.
-          </Typography>
-        </Box>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="bold" mb={1}>
+                    {therapist.name}
+                  </Typography>
 
-        {/* Search */}
-        <TextField
-          fullWidth
-          placeholder="Search therapist"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          sx={{
-            mb: 4,
-            "& .MuiOutlinedInput-root": {
-              borderRadius: 4,
-              bgcolor: "white",
-            },
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ color: "#4A7C6F" }} />
-              </InputAdornment>
-            ),
-          }}
-        />
+                  <Divider sx={{ mb: 1 }} />
 
-        {loading ? (
-          <LinearProgress
-            sx={{
-              height: 8,
-              borderRadius: 4,
-              "& .MuiLinearProgress-bar": {
-                bgcolor: "#4A7C6F",
-              },
-            }}
-          />
-        ) : filteredTherapists.length === 0 ? (
-          <Typography textAlign="center" sx={{ color: "#4A7C6F" }}>
-            No therapists found
-          </Typography>
-        ) : (
-          <Grid container spacing={3}>
-            {filteredTherapists.map((t) => (
-              <Grid item xs={12} sm={6} md={4} key={t._id}>
-                <Card
-                  sx={{
-                    borderRadius: 5,
-                    height: "100%",
-                    boxShadow: "0 10px 24px rgba(0,0,0,0.08)",
-                    bgcolor: "rgba(255,255,255,0.85)",
-                    transition: "0.3s",
-                    "&:hover": {
-                      transform: "translateY(-6px)",
-                    },
-                  }}
-                >
-                  <CardContent sx={{ p: 3 }}>
-                    <Avatar
-                      sx={{
-                        bgcolor: "#2E5349",
-                        width: 60,
-                        height: 60,
-                        mb: 2,
-                      }}
-                    >
-                      {t.name?.charAt(0).toUpperCase()}
-                    </Avatar>
-
-                    <Typography
-                      variant="h6"
-                      fontWeight="bold"
-                      sx={{ color: "#2E5349" }}
-                    >
-                      {t.name}
+                  {therapist.specialization && (
+                    <Typography variant="body2" mb={0.5}>
+                      <strong>Specialization:</strong> {therapist.specialization}
                     </Typography>
+                  )}
 
-                    <Typography sx={{ color: "#4A7C6F", mb: 1 }}>
-                      {t.specialization}
+                  {therapist.language && (
+                    <Typography variant="body2" mb={0.5}>
+                      <strong>Language:</strong> {therapist.language}
                     </Typography>
+                  )}
 
-                    <Chip
-                      label={`${t.experience} experience`}
-                      size="small"
-                      sx={{
-                        bgcolor: "#eef5f3",
-                        color: "#2E5349",
-                        mb: 1,
-                      }}
-                    />
-
-                    <Typography variant="body2" sx={{ mb: 2 }}>
-                      Language: {t.language}
+                  {therapist.availability && (
+                    <Typography variant="body2" mb={0.5}>
+                      <strong>Availability:</strong> {therapist.availability}
                     </Typography>
+                  )}
 
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      startIcon={<MedicalServicesOutlinedIcon />}
-                      sx={{
-                        py: 1.3,
-                        borderRadius: 3,
-                        bgcolor: "#2E5349",
-                        "&:hover": {
-                          bgcolor: "#1E3530",
-                        },
-                      }}
-                      onClick={() => navigate(`/book/therapist/${t._id}`)}
-                    >
-                      Book Session
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        )}
-      </Container>
+                  {therapist.fees && (
+                    <Typography variant="body2" mb={1}>
+                      <strong>Fees:</strong> ${therapist.fees}
+                    </Typography>
+                  )}
+
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    sx={{
+                      mt: 2,
+                      backgroundColor: "#4A7C6F",
+                      "&:hover": { backgroundColor: "#2E5349" },
+                      borderRadius: 2,
+                      fontWeight: "bold",
+                    }}
+                    onClick={() => handleBook(therapist._id)}
+                  >
+                    Book Therapist
+                  </Button>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
     </Box>
   );
 };
