@@ -1,19 +1,12 @@
 import React, { useState } from "react";
 import {
-  Box,
-  Container,
-  Typography,
-  Card,
-  CardContent,
-  Button,
-  LinearProgress,
-  Grid,
-  Alert,
-  Stack,
+  Box, Container, Typography, Card, CardContent,
+  Button, LinearProgress, Grid, Alert, Stack,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import SelfImprovementIcon from "@mui/icons-material/SelfImprovement";
+import API from "../../axiosinterceptor";
 
 const QUESTIONS = [
   {
@@ -99,37 +92,51 @@ const reflections = [
   "One Step at a Time",
 ];
 
+const getRecommendation = (score) => {
+  if (score <= 10) return "Mild emotional stress. Gentle self-care and mindful breathing may help.";
+  if (score <= 20) return "Moderate emotional difficulty. Consider connecting with a volunteer for support.";
+  return "Professional support recommended. A therapist can help you navigate these challenges.";
+};
+
 const AssessmentPage = () => {
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState(null);
   const [answers, setAnswers] = useState([]);
   const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const question = QUESTIONS[current];
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!selected) return;
 
     const newAnswers = [
       ...answers,
-      {
-        questionId: question.id,
-        answer: selected.text,
-        score: selected.score,
-      },
+      { questionId: question.id, answer: selected.text, score: selected.score },
     ];
 
     if (current === QUESTIONS.length - 1) {
       const totalScore = newAnswers.reduce((sum, item) => sum + item.score, 0);
+      const maxScore = QUESTIONS.length * 5;
+      const recommendation = getRecommendation(totalScore);
 
-      setMessage("Assessment completed! Calculating results...");
+      setMessage("Assessment completed! Saving results...");
+      setSaving(true);
+
+      // ✅ FIX #3: Save assessment to database before navigating
+      try {
+        await API.post("/assessments", { totalScore, maxScore, recommendation });
+      } catch (err) {
+        console.error("Failed to save assessment:", err);
+        // Don't block navigation if save fails
+      } finally {
+        setSaving(false);
+      }
 
       setTimeout(() => {
-        navigate("/result", {
-          state: { score: totalScore },
-        });
-      }, 1500);
+        navigate("/result", { state: { score: totalScore } });
+      }, 1000);
 
       return;
     }
@@ -148,140 +155,47 @@ const AssessmentPage = () => {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #f4faf7 0%, #ffffff 100%)",
-        pb: 8,
-      }}
-    >
+    <Box sx={{ minHeight: "100vh", background: "linear-gradient(135deg, #f4faf7 0%, #ffffff 100%)", pb: 8 }}>
       <Navbar />
 
       <Container maxWidth="lg" sx={{ mt: 6 }}>
-        {/* Header */}
         <Box sx={{ mb: 5, textAlign: "center" }}>
-          <Typography
-            variant="h3"
-            fontWeight="700"
-            sx={{
-              color: "#2E5349",
-              mb: 1,
-              fontSize: { xs: "2rem", md: "2.6rem" },
-            }}
-          >
+          <Typography variant="h3" fontWeight="700" sx={{ color: "#2E5349", mb: 1, fontSize: { xs: "2rem", md: "2.6rem" } }}>
             Mental Wellness Assessment 🌿
           </Typography>
-
-          <Typography sx={{ color: "#5a8a7d" }}>
-            Find a calm moment and answer with honesty.
-          </Typography>
+          <Typography sx={{ color: "#5a8a7d" }}>Find a calm moment and answer with honesty.</Typography>
         </Box>
 
-        {/* Progress */}
         <Box sx={{ maxWidth: 650, mx: "auto", mb: 4 }}>
-          <Typography
-            variant="caption"
-            fontWeight="bold"
-            sx={{ color: "#4A7C6F" }}
-          >
+          <Typography variant="caption" fontWeight="bold" sx={{ color: "#4A7C6F" }}>
             QUESTION {current + 1} OF {QUESTIONS.length}
           </Typography>
-
           <LinearProgress
             variant="determinate"
             value={((current + 1) / QUESTIONS.length) * 100}
-            sx={{
-              mt: 1,
-              height: 8,
-              borderRadius: 5,
-              bgcolor: "#e5f0eb",
-              "& .MuiLinearProgress-bar": {
-                bgcolor: "#4A7C6F",
-              },
-            }}
+            sx={{ mt: 1, height: 8, borderRadius: 5, bgcolor: "#e5f0eb", "& .MuiLinearProgress-bar": { bgcolor: "#4A7C6F" } }}
           />
         </Box>
 
-        {message && (
-          <Alert severity="success" sx={{ mb: 3 }}>
-            {message}
-          </Alert>
-        )}
+        {message && <Alert severity="success" sx={{ mb: 3 }}>{message}</Alert>}
 
-        {/* Main Card */}
-        <Card
-          sx={{
-            borderRadius: 5,
-            boxShadow: "0 12px 30px rgba(0,0,0,0.05)",
-            overflow: "hidden",
-          }}
-        >
+        <Card sx={{ borderRadius: 5, boxShadow: "0 12px 30px rgba(0,0,0,0.05)", overflow: "hidden" }}>
           <Grid container>
-            {/* Left Panel */}
-            <Grid
-              item
-              xs={12}
-              md={4}
-              sx={{
-                background:
-                  "linear-gradient(180deg, #4A7C6F 0%, #5f9486 100%)",
-                color: "white",
-                p: 5,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                textAlign: "center",
-              }}
-            >
-              <SelfImprovementIcon
-                sx={{
-                  fontSize: 70,
-                  mb: 3,
-                  opacity: 0.9,
-                }}
-              />
-
-              <Typography
-                variant="h5"
-                fontWeight="600"
-                sx={{ mb: 2 }}
-              >
-                {reflections[current]}
-              </Typography>
-
-              <Typography
-                sx={{
-                  opacity: 0.85,
-                  lineHeight: 1.8,
-                  maxWidth: 220,
-                }}
-              >
+            <Grid item xs={12} md={4} sx={{
+              background: "linear-gradient(180deg, #4A7C6F 0%, #5f9486 100%)",
+              color: "white", p: 5,
+              display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center",
+            }}>
+              <SelfImprovementIcon sx={{ fontSize: 70, mb: 3, opacity: 0.9 }} />
+              <Typography variant="h5" fontWeight="600" sx={{ mb: 2 }}>{reflections[current]}</Typography>
+              <Typography sx={{ opacity: 0.85, lineHeight: 1.8, maxWidth: 220 }}>
                 Breathe slowly, answer honestly, and stay present.
               </Typography>
             </Grid>
 
-            {/* Right Panel */}
             <Grid item xs={12} md={8}>
-              <CardContent
-                sx={{
-                  p: { xs: 3, md: 6 },
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center",
-                }}
-              >
-                <Typography
-                  variant="h5"
-                  fontWeight="600"
-                  sx={{
-                    color: "#1A332C",
-                    mb: 5,
-                    maxWidth: 500,
-                    lineHeight: 1.5,
-                  }}
-                >
+              <CardContent sx={{ p: { xs: 3, md: 6 }, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+                <Typography variant="h5" fontWeight="600" sx={{ color: "#1A332C", mb: 5, maxWidth: 500, lineHeight: 1.5 }}>
                   {question.question}
                 </Typography>
 
@@ -290,32 +204,16 @@ const AssessmentPage = () => {
                     <Button
                       key={index}
                       fullWidth
-                      variant={
-                        selected?.text === option.text
-                          ? "contained"
-                          : "outlined"
-                      }
+                      variant={selected?.text === option.text ? "contained" : "outlined"}
                       onClick={() => setSelected(option)}
                       sx={{
-                        py: 1.6,
-                        borderRadius: 2.5,
-                        textTransform: "none",
-                        fontSize: "0.98rem",
+                        py: 1.6, borderRadius: 2.5, textTransform: "none", fontSize: "0.98rem",
                         borderColor: "#dce8e3",
-                        bgcolor:
-                          selected?.text === option.text
-                            ? "#4A7C6F"
-                            : "#fff",
-                        color:
-                          selected?.text === option.text
-                            ? "white"
-                            : "#2E5349",
+                        bgcolor: selected?.text === option.text ? "#4A7C6F" : "#fff",
+                        color: selected?.text === option.text ? "white" : "#2E5349",
                         "&:hover": {
                           borderColor: "#4A7C6F",
-                          bgcolor:
-                            selected?.text === option.text
-                              ? "#3b665a"
-                              : "#f7fbf9",
+                          bgcolor: selected?.text === option.text ? "#3b665a" : "#f7fbf9",
                         },
                       }}
                     >
@@ -324,45 +222,17 @@ const AssessmentPage = () => {
                   ))}
                 </Stack>
 
-                <Stack
-                  direction="row"
-                  spacing={2}
-                  sx={{
-                    mt: 5,
-                    width: "100%",
-                    maxWidth: 460,
-                  }}
-                >
-                  <Button
-                    onClick={handleBack}
-                    disabled={current === 0}
-                    sx={{
-                      flex: 1,
-                      color: "#4A7C6F",
-                      fontWeight: "bold",
-                    }}
-                  >
+                <Stack direction="row" spacing={2} sx={{ mt: 5, width: "100%", maxWidth: 460 }}>
+                  <Button onClick={handleBack} disabled={current === 0} sx={{ flex: 1, color: "#4A7C6F", fontWeight: "bold" }}>
                     Back
                   </Button>
-
                   <Button
                     variant="contained"
                     onClick={handleNext}
-                    disabled={!selected}
-                    sx={{
-                      flex: 2,
-                      py: 1.4,
-                      borderRadius: 3,
-                      bgcolor: "#4A7C6F",
-                      fontWeight: "bold",
-                      "&:hover": {
-                        bgcolor: "#2E5349",
-                      },
-                    }}
+                    disabled={!selected || saving}
+                    sx={{ flex: 2, py: 1.4, borderRadius: 3, bgcolor: "#4A7C6F", fontWeight: "bold", "&:hover": { bgcolor: "#2E5349" } }}
                   >
-                    {current === QUESTIONS.length - 1
-                      ? "Finish"
-                      : "Next Question"}
+                    {saving ? "Saving..." : current === QUESTIONS.length - 1 ? "Finish" : "Next Question"}
                   </Button>
                 </Stack>
               </CardContent>
